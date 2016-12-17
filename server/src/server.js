@@ -20,6 +20,20 @@ var LoginSchema = require('./schemas/login.json');
 var jwt = require('jsonwebtoken');
 var secretKey = "7d672134-7365-40d8-acd6-ca6a82728471";
 
+// Import Node's HTTPS API.
+var https = require('https');
+// Import Node's file system API.
+var fs = require('fs');
+var path = require('path');
+// Read in the private key
+// __dirname is a magic variable that contains
+// the directory that contains server.js. path.join
+// joins two file paths together.
+var privateKey = fs.readFileSync(path.join(__dirname, 'key.pem'));
+// Read in the certificate, which contains the
+// public key and signature
+var certificate = fs.readFileSync(path.join(__dirname, 'key.crt'));
+
 /**
 * Strips a password from a user object.
 */
@@ -184,31 +198,31 @@ MongoClient.connect(url, function(err, db) {
   }
 
   /**
-    * Get the user ID from a token.
-    * Returns "" (an invalid ID) if it fails.
-    */
-   function getUserIdFromToken(authorizationLine) {
-     try {
-       // Cut off "Bearer " from the header value.
-       var token = authorizationLine.slice(7);
-       // Verify the token. Throws if the token is invalid or expired.
-       var tokenObj = jwt.verify(token, secretKey);
-       var id = tokenObj['id'];
-       // Check that id is a string.
-       if (typeof id === 'string') {
-         return id;
-       } else {
-         // Not a string. Return "", an invalid ID.
-         // This should technically be impossible unless
-         // the server accidentally
-         // generates a token with a number for an id!
-         return "";
-       }
-     } catch (e) {
-       // Return an invalid ID.
-       return "";
-     }
-   }
+  * Get the user ID from a token.
+  * Returns "" (an invalid ID) if it fails.
+  */
+  function getUserIdFromToken(authorizationLine) {
+    try {
+      // Cut off "Bearer " from the header value.
+      var token = authorizationLine.slice(7);
+      // Verify the token. Throws if the token is invalid or expired.
+      var tokenObj = jwt.verify(token, secretKey);
+      var id = tokenObj['id'];
+      // Check that id is a string.
+      if (typeof id === 'string') {
+        return id;
+      } else {
+        // Not a string. Return "", an invalid ID.
+        // This should technically be impossible unless
+        // the server accidentally
+        // generates a token with a number for an id!
+        return "";
+      }
+    } catch (e) {
+      // Return an invalid ID.
+      return "";
+    }
+  }
 
   /**
   * Get the feed data for a particular user.
@@ -840,8 +854,9 @@ MongoClient.connect(url, function(err, db) {
           }
         });
 
-        // Starts the server on port 3000!
-        app.listen(3000, function () {
-          console.log('Example app listening on port 3000!');
+        // Starts an https server on port 3000!
+        https.createServer({key: privateKey, cert: certificate},
+          app).listen(3000, function () {
+            console.log('Example app listening on port 3000!');
+          });
         });
-      });

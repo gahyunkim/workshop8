@@ -1,10 +1,10 @@
-import {getToken} from './credentials';
+import {getToken, updateCredentials} from './credentials';
 
 /**
- * Properly configure+send an XMLHttpRequest with error handling, authorization token,
- * and other needed properties.
- * @prop errorCb: Optional argument -- called when the server responds with an error code.
- */
+* Properly configure+send an XMLHttpRequest with error handling, authorization token,
+* and other needed properties.
+* @prop errorCb: Optional argument -- called when the server responds with an error code.
+*/
 function sendXHR(verb, resource, body, cb, errorCb) {
   var xhr = new XMLHttpRequest();
   xhr.open(verb, resource);
@@ -51,28 +51,28 @@ function sendXHR(verb, resource, body, cb, errorCb) {
 
   switch (typeof(body)) {
     case 'undefined':
-      // No body to send.
-      xhr.send();
-      break;
+    // No body to send.
+    xhr.send();
+    break;
     case 'string':
-      // Tell the server we are sending text.
-      xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
-      xhr.send(body);
-      break;
+    // Tell the server we are sending text.
+    xhr.setRequestHeader("Content-Type", "text/plain;charset=UTF-8");
+    xhr.send(body);
+    break;
     case 'object':
-      // Tell the server we are sending JSON.
-      xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-      // Convert body into a JSON string.
-      xhr.send(JSON.stringify(body));
-      break;
+    // Tell the server we are sending JSON.
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    // Convert body into a JSON string.
+    xhr.send(JSON.stringify(body));
+    break;
     default:
-      throw new Error('Unknown body type: ' + typeof(body));
+    throw new Error('Unknown body type: ' + typeof(body));
   }
 }
 
 /**
- * Emulates a REST call to get the feed data for a particular user.
- */
+* Emulates a REST call to get the feed data for a particular user.
+*/
 export function getFeedData(user, cb) {
   sendXHR('GET', '/user/' + user + '/feed', undefined, (xhr) => {
     // Call the callback with the data.
@@ -81,8 +81,8 @@ export function getFeedData(user, cb) {
 }
 
 /**
- * Adds a new status update to the database.
- */
+* Adds a new status update to the database.
+*/
 export function postStatusUpdate(user, location, contents, image, cb) {
   sendXHR('POST', '/feeditem', {
     userId: user,
@@ -96,8 +96,8 @@ export function postStatusUpdate(user, location, contents, image, cb) {
 }
 
 /**
- * Adds a new comment to the database on the given feed item.
- */
+* Adds a new comment to the database on the given feed item.
+*/
 export function postComment(feedItemId, author, contents, cb) {
   sendXHR('POST', '/feeditem/' + feedItemId + '/comments', {
     "author": author,
@@ -109,9 +109,9 @@ export function postComment(feedItemId, author, contents, cb) {
 }
 
 /**
- * Updates a feed item's likeCounter by adding the user to the likeCounter.
- * Provides an updated likeCounter in the response.
- */
+* Updates a feed item's likeCounter by adding the user to the likeCounter.
+* Provides an updated likeCounter in the response.
+*/
 export function likeFeedItem(feedItemId, userId, cb) {
   sendXHR('PUT', '/feeditem/' + feedItemId + '/likelist/' + userId, undefined, (xhr) => {
     cb(JSON.parse(xhr.responseText));
@@ -119,9 +119,9 @@ export function likeFeedItem(feedItemId, userId, cb) {
 }
 
 /**
- * Updates a feed item's likeCounter by removing the user from the likeCounter.
- * Provides an updated likeCounter in the response.
- */
+* Updates a feed item's likeCounter by removing the user from the likeCounter.
+* Provides an updated likeCounter in the response.
+*/
 export function unlikeFeedItem(feedItemId, userId, cb) {
   sendXHR('DELETE', '/feeditem/' + feedItemId + '/likelist/' + userId, undefined, (xhr) => {
     cb(JSON.parse(xhr.responseText));
@@ -129,8 +129,8 @@ export function unlikeFeedItem(feedItemId, userId, cb) {
 }
 
 /**
- * Adds a 'like' to a comment.
- */
+* Adds a 'like' to a comment.
+*/
 export function likeComment(feedItemId, commentIdx, userId, cb) {
   sendXHR('PUT', '/feeditem/' + feedItemId + '/comments/' + commentIdx + '/likelist/' + userId, undefined, (xhr) => {
     cb(JSON.parse(xhr.responseText));
@@ -138,8 +138,8 @@ export function likeComment(feedItemId, commentIdx, userId, cb) {
 }
 
 /**
- * Removes a 'like' from a comment.
- */
+* Removes a 'like' from a comment.
+*/
 export function unlikeComment(feedItemId, commentIdx, userId, cb) {
   sendXHR('DELETE', '/feeditem/' + feedItemId + '/comments/' + commentIdx + '/likelist/' + userId, undefined, (xhr) => {
     cb(JSON.parse(xhr.responseText));
@@ -147,8 +147,8 @@ export function unlikeComment(feedItemId, commentIdx, userId, cb) {
 }
 
 /**
- * Updates the text in a feed item (assumes a status update)
- */
+* Updates the text in a feed item (assumes a status update)
+*/
 export function updateFeedItemText(feedItemId, newContent, cb) {
   sendXHR('PUT', '/feeditem/' + feedItemId + '/content', newContent, (xhr) => {
     cb(JSON.parse(xhr.responseText));
@@ -156,8 +156,8 @@ export function updateFeedItemText(feedItemId, newContent, cb) {
 }
 
 /**
- * Deletes a feed item.
- */
+* Deletes a feed item.
+*/
 export function deleteFeedItem(feedItemId, cb) {
   sendXHR('DELETE', '/feeditem/' + feedItemId, undefined, () => {
     cb();
@@ -165,8 +165,8 @@ export function deleteFeedItem(feedItemId, cb) {
 }
 
 /**
- * Searches for feed items with the given text.
- */
+* Searches for feed items with the given text.
+*/
 export function searchForFeedItems(queryText, cb) {
   sendXHR('POST', '/search', queryText, (xhr) => {
     cb(JSON.parse(xhr.responseText));
@@ -174,17 +174,36 @@ export function searchForFeedItems(queryText, cb) {
 }
 
 /**
- * Authenticates the user with the server.
- * We will fill this in later on in the workshop.
- */
+* Authenticates the user with the server.
+* We will fill this in later on in the workshop.
+*/
 export function login(email, password, cb) {
-
+  sendXHR('POST', '/login', { email: email, password: password},
+  (xhr) => {
+    // Success callback: Login succeeded.
+    var authData = JSON.parse(xhr.responseText);
+    // Update credentials and indicate success via the callback!
+    updateCredentials(authData.user, authData.token);
+    cb(true);
+  }, () => {
+    // Error callback: Login failed.
+    cb(false);
+  });
 }
 
 /**
- * Signs the user up for a Facebook account.
- * We will fill this in later on in the workshop.
- */
+* Signs the user up for a Facebook account.
+* We will fill this in later on in the workshop.
+*/
 export function signup(email, fullName, password, cb) {
-  
-}
+  sendXHR('POST', '/user', { fullName: fullName,
+    email: email,
+    password: password }, () => {
+      // Called when signup succeeds! Return true for success.
+      cb(true);
+    }, () => {
+      // Called when the server returns an error code!
+      // Return false for failure.
+      cb(false);
+    });
+  }
